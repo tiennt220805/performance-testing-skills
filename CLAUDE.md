@@ -8,7 +8,9 @@ Instructions for AI agents **developing, modifying, or contributing** to this re
 
 ```text
 target-project/
-└── .claude/                         <- this repo, mounted as a submodule
+├── docs/                             <- INPUT: session.har, spec.md, openapi.json (human-provided)
+├── perf-test/                        <- OUTPUT: all generated artifacts (specs, plans, scripts, raw logs, reports)
+└── .claude/                          <- this repo, mounted as a submodule (the engine — read-only workspace)
     ├── skills/
     ├── commands/
     ├── agents/
@@ -17,6 +19,8 @@ target-project/
 ```
 
 Because of this mount point, **this repository must never contain a nested `.claude/` directory of its own**. Command trigger files live at the repository root under `commands/` (e.g. `commands/perf-spec.md`), not `.claude/commands/`. Any contribution that reintroduces a `.claude/` folder at this repo's root must be rejected.
+
+**Workspace Boundary Rule**: `.claude/` is the engine (skill/command/persona/reference definitions), never a workspace. AI Agents executing skills against a target SUT must NOT read or write any artifacts directly inside `.claude/`. All input artifacts (HAR captures, existing specs, OpenAPI documents) must be sourced from `docs/` (or the target project root); all generated output — `PERF_SPEC.md`, task plans, k6 scripts, raw execution logs, and reports — MUST be written to `perf-test/`, never into `.claude/`.
 
 Scope is exclusively **k6 Test-as-Code**. Do not add, reference, or accept content related to Apache JMeter, JVM/GC tuning, GUI-based test plans, XML test definitions, or Groovy scripting. If a contribution imports concepts from those tools, translate them into k6 JavaScript idioms or reject the contribution.
 
@@ -58,13 +62,15 @@ description: <when to use this skill, in 1-2 sentences>
 
 Rules:
 
-- **Frontmatter** `name` must exactly match the containing directory name. `description` must state the triggering condition, not just restate the skill name.
+- **Frontmatter** `name` must exactly match the containing directory name. `description` must start with `"Use when..."` and state only the specific triggering condition — not a restatement of the skill name, and not general marketing copy.
 - **Overview** — 1-2 sentences maximum. No marketing language.
 - **When to Use** — concrete trigger conditions (slash command invoked, specific user intent, specific artifact present, e.g. a HAR file).
 - **Core Process / Workflow** — numbered, step-by-step. Each step should be independently verifiable.
 - **Common Rationalizations** — a two-column table (`Common Agent Rationalization` | `Engineering Reality`) capturing excuses an agent might use to skip rigor, and the correct rebuttal. Minimum 2 rows for a merged skill.
 - **Red Flags** — bullet list of observable agent behaviors that indicate the skill is being violated (e.g. "reporting p95 without a threshold pass/fail verdict").
 - **Required Output Format** — the enforced structural shape of the skill's output (tables, ASCII blocks, key-value metrics). This section is authoritative — an agent output that doesn't match this shape is non-compliant.
+
+**Context Window Discipline**: every `skills/*/SKILL.md` MUST stay under **500 lines** to protect the LLM's context window. Long templates, elaborate code examples, or deep lookup matrices do not belong inline — push them into a skill-local `skills/<skill-name>/references/` subdirectory and link to them from the relevant section instead of inlining them.
 
 ## 4. Formatting Rules for Output Mandates
 
@@ -78,7 +84,7 @@ All skill outputs are **metrics-first**. Applies to every `Required Output Forma
 
 ## 5. Rules for Adding Commands and Personas
 
-- **`commands/*.md`** — one file per slash command. Filename must match the command name (`commands/perf-spec.md` → `/perf-spec`). Each command file's job is to route to exactly one skill in `skills/`; it should not duplicate skill logic. Keep command files short — they are triggers, not documentation.
+- **`commands/*.md`** — one file per slash command. Filename must match the command name (`commands/perf-spec.md` → `/perf-spec`). **Strict Thin Commands rule**: a command file is a trigger/router ONLY — under **20 lines**, naming the active persona and invoking the corresponding skill. It must NEVER contain execution logic, workflow steps, or instructions that duplicate what already lives in the target `SKILL.md`. If a command file is explaining *how* to do something rather than just *which skill handles it*, that content belongs in the skill, not the command.
 - **`agents/*.md`** — persona definitions used for role-switching during multi-phase engagements (see `AGENTS.md` § Persona Activation & Sub-Agent Protocol). A new persona is only justified if it represents a genuinely distinct responsibility boundary (e.g. build-phase architect vs. audit-phase investigator), not a cosmetic rename.
 - **`references/*.md`** — supporting technical material (cheatsheets, theory, concurrency patterns) that skills may link to but that is not itself a workflow. References must stay k6/JavaScript-centric; do not add tool-specific reference material outside the Grafana k6 ecosystem.
 - **`hooks/*`** — session lifecycle automation (e.g. `session-start.sh`). Hooks must be idempotent, side-effect-free on failure, and must not silently swallow errors that would block accurate load testing (e.g. a missing `k6` binary must fail loudly, not warn quietly).
