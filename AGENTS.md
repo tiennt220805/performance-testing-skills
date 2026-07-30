@@ -120,7 +120,7 @@ The Master spawns the `bottleneck-auditor` Sub-Agent immediately after drafting 
 
 The payload handed to the Sub-Agent contains **exactly three clean components** and nothing else:
 1. Target SLOs from `perf-test/PERF_SPEC.md`.
-2. Raw Execution Logs — the unedited `perf-test/logs/{strategy}-verify.log` or `perf-test/logs/{strategy}-audit.log` file for the run under audit (all matching `perf-test/logs/*-audit.log` files when the Sub-Agent is spawned for SHIP).
+2. Input Evidence Component — the shape of this component differs by gate: for Gate 1 (`/perf-verify`) and Gate 2 (`/perf-audit`), it is the raw, unedited execution log for the run under audit (`perf-test/logs/{strategy}-{phase}.log`); for Gate 3 (`/perf-gate`), it is ALL already-`APPROVED` strategy reports (`perf-test/reports/audit-rca-*.md`) for every strategy declared in `PERF_SPEC.md`. Gate 3 audits aggregate scorecard completeness and consistency across the declared strategies — it does not re-run raw-log RCA, since that root-cause work was already performed and approved at Gate 2.
 3. Master's Draft Report (the summary/report the Master intends to present).
 
 The Master's own chain-of-thought / reasoning history that produced the draft MUST NOT be passed into the Sub-Agent's context. The Sub-Agent audits the *artifacts*, not the Master's internal reasoning — passing along the reasoning trail would let the Master's framing bias the "independent" verdict.
@@ -129,7 +129,7 @@ The Master's own chain-of-thought / reasoning history that produced the draft MU
 
 Per the `[AUDIT_FEEDBACK_BLOCK]` format defined in `agents/bottleneck-auditor.md`:
 - `AUDIT_VERDICT`: `APPROVED` or `REJECTED`.
-- List of Bypassed Errors — any error signature present in the reviewed `perf-test/logs/{strategy}-verify.log` / `perf-test/logs/{strategy}-audit.log` file(s) but omitted or downplayed in the Master's draft.
+- List of Bypassed Errors — for Gate 1/Gate 2, any error signature present in the reviewed `perf-test/logs/{strategy}-{phase}.log` file but omitted or downplayed in the Master's draft; for Gate 3, any SLO breach, missing strategy, or contradiction present in one of the `perf-test/reports/audit-rca-*.md` files but smoothed over, averaged away, or omitted from the Master's aggregate scorecard draft.
 - Required Corrections — precise instructions for what the Master must fix before re-submitting.
 
 The Sub-Agent's final, audited output is what gets persisted to the phase's report file (`perf-test/reports/verify-sanity-{strategy}.md`, `perf-test/reports/audit-rca-{strategy}.md`, or `perf-test/reports/final-gate-scorecard.md`) — a report file must never be written from an un-audited Master draft.
