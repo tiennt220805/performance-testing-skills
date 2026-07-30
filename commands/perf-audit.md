@@ -1,13 +1,27 @@
 ---
-description: Analyze load test telemetry for bottlenecks and root causes (invokes bottleneck-root-cause-analysis skill).
+description: Execute full load performance test and trigger Sub-Agent Audit Gate 2 (invokes bottleneck-root-cause-analysis skill).
 ---
 
-# /perf-audit
+# Command: /perf-audit
 
-Route to `skills/bottleneck-root-cause-analysis/SKILL.md` as the Master Agent (`agents/perf-architect.md`):
+Trigger for the **AUDIT** phase of the performance testing lifecycle.
 
-1. Execute the full load profile (e.g. 5 VU) and capture the raw CLI output.
-2. Draft the baseline-vs-actual telemetry table and error distribution signature from that raw output.
-3. Spawn the `bottleneck-auditor` Sub-Agent (`agents/bottleneck-auditor.md`) with: target SLOs from `PERF_SPEC.md`, the raw execution log, and this draft report — instruct it to perform the 4-layer stack audit (Client, Event Loop, SQLite Write Lock, Hardware).
-4. Do not output the final result to the user until the Sub-Agent returns `AUDIT VERDICT: APPROVED` in its `[AUDIT_FEEDBACK_BLOCK]`. On `REJECTED`, apply the Required Corrections and resubmit for another audit pass before presenting anything.
-5. Present the final response with both the raw evidence and the Sub-Agent's `[AUDIT_FEEDBACK_BLOCK]` attached.
+1. Confirm `hooks/session-start.sh` has run and passed for this session — STOP immediately if k6 is missing or mismatched.
+2. Read `skills/using-performance-testing-skills/SKILL.md` to internalize the 7 Non-Negotiables and Workspace Boundary Rule.
+3. Activate persona `agents/perf-architect.md` and execute `skills/bottleneck-root-cause-analysis/SKILL.md`.
+
+```text
+================================================================================
+PERFORMANCE SUITE ROUTER STATUS
+================================================================================
+ACTIVE PHASE      : AUDIT
+ACTIVE STRATEGY   : Per active loop strategy (e.g., baseline | spike)
+ACTIVE PERSONA    : perf-architect (Master) -> bottleneck-auditor (Sub-Agent Gate 2)
+TARGET COMMAND    : /perf-audit
+TARGET SKILL      : skills/bottleneck-root-cause-analysis/SKILL.md
+INPUT CONTRACT    : perf-test/scripts/{strategy}.k6.js, perf-test/reports/verify-sanity-{strategy}.md, perf-test/PERF_SPEC.md, perf-test/PERF_PLAN.md
+OUTPUT TARGET     : perf-test/logs/{strategy}-audit.log, perf-test/reports/audit-rca-{strategy}.md
+SUB-AGENT GATE    : [ PENDING | APPROVED | REJECTED ] (Gate 2 — Full Load & 4-Layer RCA Audit)
+7 NON-NEGOTIABLES : [ 1:OK 2:OK 3:OK 4:OK 5:OK 6:OK 7:OK ]
+================================================================================
+```
