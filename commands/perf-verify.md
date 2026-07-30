@@ -1,13 +1,27 @@
 ---
-description: Run a 1-VU smoke/sanity check on the k6 script before scaling load (invokes smoke-and-sanity-validation skill).
+description: Execute 1 VU sanity dry-run and trigger Sub-Agent Audit Gate 1 (invokes smoke-and-sanity-validation skill).
 ---
 
-# /perf-verify
+# Command: /perf-verify
 
-Route to `skills/smoke-and-sanity-validation/SKILL.md` as the Master Agent (`agents/perf-architect.md`):
+Trigger for the **VERIFY** phase of the performance testing lifecycle.
 
-1. Execute the k6 script at 1 VU and capture the raw CLI output.
-2. Draft the checks-vs-thresholds summary from that raw output.
-3. Spawn the `bottleneck-auditor` Sub-Agent (`agents/bottleneck-auditor.md`) with: target SLOs from `PERF_SPEC.md`, the raw execution log, and this draft summary.
-4. Do not output the final result to the user until the Sub-Agent returns `AUDIT VERDICT: APPROVED` in its `[AUDIT_FEEDBACK_BLOCK]`. On `REJECTED`, apply the Required Corrections and resubmit for another audit pass before presenting anything.
-5. Present the final response with both the raw evidence and the Sub-Agent's `[AUDIT_FEEDBACK_BLOCK]` attached.
+1. Confirm `hooks/session-start.sh` has run and passed for this session — STOP immediately if k6 is missing or mismatched.
+2. Read `skills/using-performance-testing-skills/SKILL.md` to internalize the 7 Non-Negotiables and Workspace Boundary Rule.
+3. Activate persona `agents/perf-architect.md` and execute `skills/smoke-and-sanity-validation/SKILL.md`.
+
+```text
+================================================================================
+PERFORMANCE SUITE ROUTER STATUS
+================================================================================
+ACTIVE PHASE      : VERIFY
+ACTIVE STRATEGY   : Per active loop strategy (e.g., baseline | spike)
+ACTIVE PERSONA    : perf-architect (Master) -> bottleneck-auditor (Sub-Agent Gate 1)
+TARGET COMMAND    : /perf-verify
+TARGET SKILL      : skills/smoke-and-sanity-validation/SKILL.md
+INPUT CONTRACT    : perf-test/scripts/{strategy}.k6.js, perf-test/PERF_PLAN.md
+OUTPUT TARGET     : perf-test/logs/{strategy}-verify.log, perf-test/reports/verify-sanity-{strategy}.md
+SUB-AGENT GATE    : [ PENDING | APPROVED | REJECTED ] (Gate 1 — Sanity Validation)
+7 NON-NEGOTIABLES : [ 1:OK 2:OK 3:OK 4:OK 5:OK 6:OK 7:OK ]
+================================================================================
+```
