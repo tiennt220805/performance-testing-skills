@@ -28,15 +28,15 @@ Scope is exclusively **k6 Test-as-Code**. Do not add, reference, or accept conte
 
 Every skill, command, and persona file in this repository must encode — or at minimum never contradict — these seven rules. They govern how the resulting agent behaves when running performance tests in a target project.
 
-| # | Principle | Rule |
-|---|---|---|
-| 1 | **Never Assume Latency** | Never state or imply a latency/throughput number that was not measured in the current session. No estimation, no "should be fine," no recall from a prior unrelated run. |
-| 2 | **Enforce Clean Baseline** | Require a server restart and/or database re-seed before any comparative test. Comparing a warm, polluted state against a cold one invalidates the result. |
-| 3 | **Measure Before Optimizing** | Root cause must be proven with runtime data (CPU, RSS, event-loop lag, DB lock waits, k6 trend metrics) before any fix is proposed. No guessing at bottlenecks from code inspection alone. |
-| 4 | **Surface Assumptions** | Explicitly declare load profile boundaries (VUs, duration, ramp shape) and SUT architecture limits (e.g. single-process Node.js, SQLite single-writer) before and inside every report. |
-| 5 | **Reject Flawed Logic** | Push back on invalid extrapolation — e.g., linearly projecting 5 VU results to 500 VUs on a SQLite-backed single-writer service. State why the extrapolation is invalid instead of silently complying. |
-| 6 | **Require Runtime Evidence** | No step may be marked complete without quantitative proof: an ASCII k6 summary block, a metrics table, or raw log output. Prose claims without attached evidence are not acceptable completions. |
-| 7 | **Independent Sub-Agent Audit** | No telemetry-producing command (`/perf-verify`, `/perf-audit`, `/perf-gate`) can output a final artifact without first undergoing a verification pass by the `bottleneck-auditor` Sub-Agent, spawned adversarially against the Master Agent's (`perf-architect`) draft findings. A `REJECTED` audit verdict blocks the report; only an `APPROVED` verdict permits output. |
+| #   | Principle                       | Rule                                                                                                                                                                                                                                                                                                                                                                      |
+| --- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Never Assume Latency**        | Never state or imply a latency/throughput number that was not measured in the current session. No estimation, no "should be fine," no recall from a prior unrelated run.                                                                                                                                                                                                  |
+| 2   | **Enforce Clean Baseline**      | Require a server restart and/or database re-seed before any comparative test. Comparing a warm, polluted state against a cold one invalidates the result.                                                                                                                                                                                                                 |
+| 3   | **Measure Before Optimizing**   | Root cause must be proven with runtime data (CPU, RSS, event-loop lag, DB lock waits, k6 trend metrics) before any fix is proposed. No guessing at bottlenecks from code inspection alone.                                                                                                                                                                                |
+| 4   | **Surface Assumptions**         | Explicitly declare load profile boundaries (VUs, duration, ramp shape) and SUT architecture limits (e.g. single-process Node.js, SQLite single-writer) before and inside every report.                                                                                                                                                                                    |
+| 5   | **Reject Flawed Logic**         | Push back on invalid extrapolation — e.g., linearly projecting 5 VU results to 500 VUs on a SQLite-backed single-writer service. State why the extrapolation is invalid instead of silently complying.                                                                                                                                                                    |
+| 6   | **Require Runtime Evidence**    | No step may be marked complete without quantitative proof: an ASCII k6 summary block, a metrics table, or raw log output. Prose claims without attached evidence are not acceptable completions.                                                                                                                                                                          |
+| 7   | **Independent Sub-Agent Audit** | No telemetry-producing command (`/perf-verify`, `/perf-audit`, `/perf-gate`) can output a final artifact without first undergoing a verification pass by the `bottleneck-auditor` Sub-Agent, spawned adversarially against the Master Agent's (`perf-architect`) draft findings. A `REJECTED` audit verdict blocks the report; only an `APPROVED` verdict permits output. |
 
 When writing or reviewing a skill file, verify each of the above is reflected in that skill's `Core Process / Workflow`, `Common Rationalizations`, or `Red Flags` sections as relevant.
 
@@ -53,10 +53,15 @@ description: <when to use this skill, in 1-2 sentences>
 # <Skill Title>
 
 ## Overview
+
 ## When to Use
+
 ## Core Process / Workflow
+
 ## Common Rationalizations
+
 ## Red Flags
+
 ## Required Output Format
 ```
 
@@ -69,6 +74,8 @@ Rules:
 - **Common Rationalizations** — a two-column table (`Common Agent Rationalization` | `Engineering Reality`) capturing excuses an agent might use to skip rigor, and the correct rebuttal. Minimum 2 rows for a merged skill.
 - **Red Flags** — bullet list of observable agent behaviors that indicate the skill is being violated (e.g. "reporting p95 without a threshold pass/fail verdict").
 - **Required Output Format** — the enforced structural shape of the skill's output (tables, ASCII blocks, key-value metrics). This section is authoritative — an agent output that doesn't match this shape is non-compliant.
+
+**Illustrative Examples & the EShop Reference Scenario**: any illustrative example inside a `Required Output Format` section may use the EShop reference scenario (search/cart/checkout) for concreteness, but every such example MUST include an explicit note distinguishing the reusable technique (structure, patterns, sourcing rules) from the domain-specific content (route names, entity names) that must be replaced per target project. Without this note, an agent risks pattern-matching the EShop literal route names onto an unrelated target domain (e.g. banking, IoT) instead of substituting that project's actual `In-Scope Routes` from its `PERF_SPEC.md`.
 
 **Context Window Discipline**: every `skills/*/SKILL.md` MUST stay under **500 lines** to protect the LLM's context window. Long templates, elaborate code examples, or deep lookup matrices do not belong inline — push them into a skill-local `skills/<skill-name>/references/` subdirectory and link to them from the relevant section instead of inlining them.
 
@@ -84,7 +91,7 @@ All skill outputs are **metrics-first**. Applies to every `Required Output Forma
 
 ## 5. Rules for Adding Commands and Personas
 
-- **`commands/*.md`** — one file per slash command. Filename must match the command name (`commands/perf-spec.md` → `/perf-spec`). **Strict Thin Commands rule**: a command file is a trigger/router ONLY — under **20 lines**, naming the active persona and invoking the corresponding skill. It must NEVER contain execution logic, workflow steps, or instructions that duplicate what already lives in the target `SKILL.md`. If a command file is explaining *how* to do something rather than just *which skill handles it*, that content belongs in the skill, not the command.
+- **`commands/*.md`** — one file per slash command. Filename must match the command name (`commands/perf-spec.md` → `/perf-spec`). **Strict Thin Commands rule**: a command file is a trigger/router ONLY — the instructional prose (steps naming the persona/skill) stays under 10 lines; the fenced Router Status block (per the 9-field template in `using-performance-testing-skills/SKILL.md`) is exempt from this count since it's a templated echo, not execution logic. It must NEVER contain execution logic, workflow steps, or instructions that duplicate what already lives in the target `SKILL.md`. If a command file is explaining _how_ to do something rather than just _which skill handles it_, that content belongs in the skill, not the command.
 - **`agents/*.md`** — persona definitions used for role-switching during multi-phase engagements (see `AGENTS.md` § Persona Activation & Sub-Agent Protocol). A new persona is only justified if it represents a genuinely distinct responsibility boundary (e.g. build-phase architect vs. audit-phase investigator), not a cosmetic rename.
 - **`references/*.md`** — supporting technical material (cheatsheets, theory, concurrency patterns) that skills may link to but that is not itself a workflow. References must stay k6/JavaScript-centric; do not add tool-specific reference material outside the Grafana k6 ecosystem.
 - **`hooks/*`** — session lifecycle automation (e.g. `session-start.sh`). Hooks must be idempotent, side-effect-free on failure, and must not silently swallow errors that would block accurate load testing (e.g. a missing `k6` binary must fail loudly, not warn quietly).
