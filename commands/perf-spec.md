@@ -14,14 +14,14 @@ Trigger for the **DEFINE** phase of the performance testing lifecycle.
 ================================================================================
 PERFORMANCE SUITE ROUTER STATUS
 ================================================================================
-ACTIVE PHASE     : DEFINE
-ACTIVE STRATEGY  : N/A (Spec definition phase)
-ACTIVE PERSONA   : perf-architect (Master)
-TARGET COMMAND   : /perf-spec
-TARGET SKILL     : skills/perf-requirements-and-slo/SKILL.md
-INPUT CONTRACT   : docs/ (.har, spec.md, openapi.json)
-OUTPUT TARGET    : perf-test/PERF_SPEC.md
-SUB-AGENT GATE   : N/A (DEFINE phase)
+ACTIVE PHASE      : DEFINE
+ACTIVE STRATEGY   : N/A (Spec definition phase)
+ACTIVE PERSONA    : perf-architect (Master)
+TARGET COMMAND    : /perf-spec
+TARGET SKILL      : skills/perf-requirements-and-slo/SKILL.md
+INPUT CONTRACT    : docs/ (.har, spec.md, openapi.json)
+OUTPUT TARGET     : perf-test/PERF_SPEC.md
+SUB-AGENT GATE    : N/A (DEFINE phase)
 7 NON-NEGOTIABLES : [ 1:OK 2:OK 3:OK 4:OK 5:OK 6:OK 7:OK ]
 ================================================================================
 ```
