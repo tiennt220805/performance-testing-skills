@@ -25,7 +25,7 @@ Establishes a clean, representative environment baseline and the task plan for t
    - An **Idle Baseline measurement** captured right after restart and before any load: CPU utilization **< 5%**, RSS/RAM holding steady (not still climbing from a cold-start allocation spike), and no competing background cron jobs or scheduled tasks running on the SUT host.
    - Do not proceed to `/perf-script` or a load run until all three steps above have been executed and their output captured as evidence — a restart/re-seed/idle-check that is merely claimed, without a captured log line proving it ran, does not satisfy this rule.
    - **This checklist is a reusable procedure, not a one-off static record.** While `/perf-plan` itself is invoked only once, every subsequent strategy declared in `PERF_SPEC.md` requires a fresh, independent baseline reset before its VERIFY/AUDIT pass begins. The `perf-architect` Master Agent MUST execute a fresh server restart + DB re-seed + idle check, and append/update the fresh execution evidence into `PERF_PLAN.md`'s strategy-aware checklist table (see Required Output Format) before initiating that strategy's VERIFY phase — this is the PLAN-side bookkeeping for the reset already mandated by `AGENTS.md` §2's Multi-Strategy Lifecycle Loop.
-3. **Environment Parity & Architecture Isolation Check.** Using the Target SUT Stack recorded in `PERF_SPEC.md`, confirm and record the SUT's concurrency/architecture limits — e.g. single-process Node.js (one event loop, no in-process horizontal scaling), SQLite single-writer (one write transaction committed at a time, concurrent writers serialize or fail with `SQLITE_BUSY`), a JVM service's configured connection pool size, or an in-memory cache that resets on restart. Also confirm the load generator (k6) and the SUT are not competing for the same CPU/RAM/network interface in a way that would contaminate results (e.g. running k6 and the SUT on the same single-core VM makes the load generator itself a bottleneck). These limits are required inputs to `bottleneck-auditor`'s later 4-layer RCA — they must be on record now, not discovered mid-audit.
+3. **Environment Parity & Architecture Isolation Check.** Using the Target SUT Stack recorded in `PERF_SPEC.md`, confirm and record the SUT's concurrency/architecture limits — e.g. single-process Node.js (one event loop, no in-process horizontal scaling), SQLite single-writer (one write transaction committed at a time, concurrent writers serialize or fail with `SQLITE_BUSY`), a JVM service's configured connection pool size, or an in-memory cache that resets on restart. Also confirm the load generator (k6) and the SUT are not competing for the same CPU/RAM/network interface in a way that would contaminate results (e.g. running k6 and the SUT on the same single-core VM makes the load generator itself a bottleneck). These limits are required inputs to `bottleneck-auditor`'s later 4-layer RCA — they must be on record now, not discovered mid-audit. Also read the `[INFO] Host machine: ...` line printed by `hooks/session-start.sh`'s output for this session and record it as the **Host Machine Specification** in `PERF_PLAN.md` — this is captured automatically once per session, never typed from memory or assumed to match a prior engagement's machine.
 4. **Task Breakdown & Plan Persistence.** For **every** strategy declared in `PERF_SPEC.md`'s metadata, break down the concrete BUILD/VERIFY/AUDIT tasks (script to build, sanity run, full load run) plus any test-data seeding specific to that strategy. Write (or update) `perf-test/PERF_PLAN.md` with the Environment Parity Summary, the Clean Baseline Verification Checklist, the Idle Telemetry Table, and the per-strategy Task Breakdown Table. This file is the required input for BUILD (`/perf-script`) — no later phase proceeds without it.
 
 ## Common Rationalizations
@@ -50,6 +50,7 @@ Establishes a clean, representative environment baseline and the task plan for t
 - SUT architecture limits (single-writer DB, single-process server, connection pool size, etc.) are not written down anywhere before AUDIT begins.
 - The plan file is written outside `perf-test/` — to the project root, or worse, inside `.claude/` — a direct Workspace Boundary Rule violation.
 - VERIFY/AUDIT for a second or later declared strategy begins by reusing the baseline reset evidence captured for an earlier strategy, instead of executing and recording a fresh restart/re-seed/idle-check specific to that strategy's run.
+- `PERF_PLAN.md`'s Environment Parity Summary is missing Host Machine Specification, or the values don't trace back to this session's `session-start.sh` output.
 
 ## Required Output Format
 
@@ -62,6 +63,11 @@ Persist `perf-test/PERF_PLAN.md` in this shape — parity summary, then the base
 - Target SUT Stack (from PERF_SPEC.md): Node.js (Express) + SQLite, single-process/single-writer
 - Architecture Limits: single event loop; SQLite single-writer (WAL mode: no) — concurrent writes serialize or raise SQLITE_BUSY
 - Load Generator / SUT Topology: separate hosts (k6 on host A, SUT on host B, 4 vCPU each)
+- Host Machine Specification (captured via hooks/session-start.sh, this engagement's run):
+  - CPU: {{CPU_MODEL}}, {{CPU_CORES}} cores
+  - RAM: {{TOTAL_RAM_GB}}GB
+  - OS: {{OS_INFO}}
+  - Captured: {{ISO_8601_TIMESTAMP}}
 
 ## Clean Baseline Verification Checklist
 
@@ -90,4 +96,5 @@ Persist `perf-test/PERF_PLAN.md` in this shape — parity summary, then the base
 - Every strategy declared in `PERF_SPEC.md`'s metadata must have its own row in the Clean Baseline Verification Checklist — the first strategy's row is filled in during PLAN; every subsequent strategy's row stays `PENDING` until `perf-architect` executes and records that strategy's fresh reset immediately before its own VERIFY phase.
 - Every Idle Telemetry row must show a `Status` of `PASS` or `FAIL` against its threshold — a `FAIL` blocks proceeding to BUILD until resolved and re-measured.
 - Every strategy declared in `PERF_SPEC.md`'s metadata must have exactly one row in the Task Breakdown Table.
+- Host Machine Specification must be captured from `session-start.sh`'s actual `[INFO]` output for this session — never typed from memory or assumed to match a prior engagement's machine.
 - Prose outside the tables is capped at 3-5 bullet points.

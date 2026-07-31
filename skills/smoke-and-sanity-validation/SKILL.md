@@ -55,6 +55,7 @@ Persist `perf-test/reports/verify-sanity-{strategy}.md` in this shape — metada
 - Phase: VERIFY (Sub-Agent Audit Gate 1)
 - Script: perf-test/scripts/baseline.k6.js
 - Baseline Reset Reference: PERF_PLAN.md Clean Baseline Verification Checklist row "Load (baseline)" — PASS
+- Machine Reference: PERF_PLAN.md Environment Parity Summary — {{CPU_MODEL}}, {{TOTAL_RAM_GB}}GB RAM
 
 ## Sanity Execution Summary
 
@@ -90,6 +91,7 @@ REQUIRED_CORRECTIONS: None — cleared for release.
 ````
 
 - The `Baseline Reset Reference` line in the report's Metadata header MUST cite the exact row in `PERF_PLAN.md` that carries a `PASS` status with fresh execution evidence for this strategy — referencing a `PENDING`, unreset, or stale row is non-compliant.
+- The `Machine Reference` line MUST cite `PERF_PLAN.md`'s Environment Parity Summary Host Machine Specification for this session — never left blank and never typed independently of what `PERF_PLAN.md` already records.
 - The `[SUB-AGENT ADVERSARIAL AUDIT REPORT]` block is mandatory and must be pasted verbatim from `bottleneck-auditor`'s output — never paraphrased or reconstructed by the Master.
 - Every row in the Checks vs Thresholds Breakdown must show a real `PASS`/`FAIL` result traceable to the raw log, never an assumed default.
 - Prose outside the tables/blocks is capped at 3-5 bullet points.

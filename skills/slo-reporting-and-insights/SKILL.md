@@ -31,6 +31,7 @@ Aggregates every strategy declared in `perf-test/PERF_SPEC.md` from their alread
 | "I'll write to `gate-scorecard.md` instead of `final-gate-scorecard.md`, it's close enough." | The filename is a fixed contract other tooling (CI/CD parsing, downstream engagements) may depend on — use the exact name `perf-test/reports/final-gate-scorecard.md`, not an approximation. |
 | "The AUDIT reports look thin on RCA detail, I'll re-run the raw logs myself to fill in the gaps for this scorecard." | Re-deriving RCA from raw logs at Gate 3 is out of scope — that analysis was already performed and independently `APPROVED` at Gate 2. If a Gate 2 report is genuinely insufficient, that strategy needs to re-enter AUDIT, not have its RCA silently redone inside SHIP. |
 | "The Sub-Agent's block is long, I'll summarize the highlights instead of pasting the whole thing." | The `[SUB-AGENT ADVERSARIAL AUDIT REPORT]` block must be pasted **verbatim** into the persisted scorecard — summarizing it reintroduces the Master-framing bias the independent Gate 3 audit exists to eliminate. |
+| "Numbers from my teammate's run last week looked worse, I'll note this run as an improvement." | Different machines produce non-comparable numbers unless both runs' `Machine Reference` match — flag the machine difference explicitly instead of implying an apples-to-apples improvement; if machines differ, state that no valid comparison can be made. |
 
 ## Red Flags
 
@@ -42,6 +43,7 @@ Aggregates every strategy declared in `perf-test/PERF_SPEC.md` from their alread
 - One strategy's SLO breach is averaged away against another strategy's clean pass in the Executive Scorecard Table.
 - The `[SUB-AGENT ADVERSARIAL AUDIT REPORT]` block is paraphrased or reconstructed instead of pasted verbatim.
 - The retry loop continues past 3 consecutive `REJECTED` verdicts for the SHIP phase without stopping and escalating to the user.
+- A scorecard compares this engagement's numbers against a prior run's numbers (e.g. "improved from last week") without first confirming both runs share the same Machine Reference — cross-machine comparison without disclosure is exactly the kind of unmeasured claim Non-Negotiable 5 forbids.
 
 ## Required Output Format
 
@@ -55,6 +57,7 @@ Persist `perf-test/reports/final-gate-scorecard.md` in this shape — metadata h
 ## Engagement Metadata
 - Declared Strategies: Load (baseline), Spike
 - Source Reports: perf-test/reports/audit-rca-baseline.md (APPROVED), perf-test/reports/audit-rca-spike.md (APPROVED)
+- Machine Reference: {{CPU_MODEL}}, {{TOTAL_RAM_GB}}GB RAM (all strategies ran on the same machine this engagement; if strategies ran on different machines, list each strategy with its own Machine Reference separately here instead of a single shared line)
 
 ## Executive Scorecard Table
 

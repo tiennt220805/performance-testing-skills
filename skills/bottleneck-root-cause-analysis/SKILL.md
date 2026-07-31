@@ -68,6 +68,7 @@ Persist `perf-test/reports/audit-rca-{strategy}.md` in this shape — metadata h
 - Phase: AUDIT (Sub-Agent Audit Gate 2)
 - Script: perf-test/scripts/baseline.k6.js
 - Baseline Reset Reference: PERF_PLAN.md Clean Baseline Verification Checklist row "Load (baseline)" — PASS (reused from VERIFY; see Core Process Step 1)
+- Machine Reference: PERF_PLAN.md Environment Parity Summary — {{CPU_MODEL}}, {{TOTAL_RAM_GB}}GB RAM
 
 ## Full Load Telemetry Table (Per-Endpoint vs. SLO)
 
@@ -114,5 +115,6 @@ REQUIRED_CORRECTIONS: None — cleared for release.
 ````
 
 - The `[SUB-AGENT ADVERSARIAL AUDIT REPORT]` block is mandatory and must be pasted verbatim from `bottleneck-auditor`'s actual output — never paraphrased or reconstructed by the Master.
+- The `Machine Reference` line MUST cite `PERF_PLAN.md`'s Environment Parity Summary Host Machine Specification for this session — never left blank and never typed independently of what `PERF_PLAN.md` already records.
 - Every layer row in the 4-Layer RCA Inspection Matrix must be filled in, even when the verdict is "No signal at this layer" — an omitted row is non-compliant.
 - Prose outside the tables/blocks is capped at 3-5 bullet points.

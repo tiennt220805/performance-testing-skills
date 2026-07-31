@@ -90,5 +90,31 @@ if [ ! -d "${PROJECT_ROOT}/docs" ] && [ ! -d "${PROJECT_ROOT}/perf-test" ]; then
   echo "          and docs/ must be supplied by the user. Not treated as a fatal environment error."
 fi
 
+# 5. [INFO, not fatal] Capture host machine spec for report traceability — cross-platform,
+#    detected once per session, never manually typed by the agent (Non-Negotiable 1).
+#    Supported shells: macOS Terminal, Linux (including WSL), and Windows via Git Bash/MSYS2/
+#    Cygwin (which lack /proc but can shell out to powershell.exe for WMI/CIM data). Raw
+#    cmd.exe/PowerShell with no bash interpreter cannot run this script at all — that is a
+#    pre-existing prerequisite of the whole hook, not something this step can work around.
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  CPU_MODEL="$(sysctl -n machdep.cpu.brand_string 2>/dev/null || echo unknown)"
+  CPU_CORES="$(sysctl -n hw.ncpu 2>/dev/null || echo unknown)"
+  TOTAL_RAM_GB="$(( $(sysctl -n hw.memsize 2>/dev/null || echo 0) / 1073741824 ))"
+elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+  # Git Bash / MSYS2 / Cygwin on Windows: no real /proc filesystem, shell out to
+  # powershell.exe (present on the system PATH even from within these bash environments).
+  CPU_MODEL="$(powershell.exe -NoProfile -Command "(Get-CimInstance Win32_Processor).Name" 2>/dev/null | tr -d '\r' || echo unknown)"
+  CPU_CORES="$(powershell.exe -NoProfile -Command "(Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors" 2>/dev/null | tr -d '\r' || echo unknown)"
+  TOTAL_RAM_GB="$(powershell.exe -NoProfile -Command "[math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB)" 2>/dev/null | tr -d '\r' || echo unknown)"
+else
+  # Linux, and WSL (which reports linux-gnu) — real /proc filesystem available.
+  CPU_MODEL="$(grep -m1 'model name' /proc/cpuinfo 2>/dev/null | cut -d: -f2 | xargs || echo unknown)"
+  CPU_CORES="$(nproc 2>/dev/null || echo unknown)"
+  TOTAL_RAM_GB="$(( $(grep MemTotal /proc/meminfo 2>/dev/null | awk '{print $2}' || echo 0) / 1048576 ))"
+fi
+OS_INFO="$(uname -s) $(uname -r)"
+
+echo "[INFO] Host machine: ${CPU_MODEL}, ${CPU_CORES} cores, ${TOTAL_RAM_GB}GB RAM, ${OS_INFO}"
+
 echo "[SUCCESS] Session environment validated. Grafana k6 engine ready (version ${DETECTED_VERSION})."
 exit 0
