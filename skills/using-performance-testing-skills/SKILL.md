@@ -35,7 +35,7 @@ Every decision in every phase must encode — or at minimum never contradict —
 | # | Rule | In One Line |
 |---|---|---|
 | 1 | **Never Assume Latency** | No latency/throughput number without a measured `k6` metric from *this* session. |
-| 2 | **Enforce Clean Baseline** | Server restart / DB re-seed before every comparative run — no exceptions for time pressure. |
+| 2 | **Enforce Clean & Authorized Baseline** | Server restart / DB re-seed before every comparative run, AND explicit user-confirmed target authorization + third-party sandboxing before any full-load run — no exceptions for time pressure or a "probably fine" assumption. |
 | 3 | **Measure Before Optimizing** | Root cause proven with runtime data across all 4 RCA layers, never from code inspection alone. |
 | 4 | **Surface Assumptions** | Load profile boundaries and SUT architecture limits stated explicitly in every draft. |
 | 5 | **Reject Flawed Logic** | Push back on invalid extrapolation beyond the tested load profile, and say why. |
@@ -81,6 +81,7 @@ If `PERF_SPEC.md` declares multiple strategies (e.g. Load + Spike), VERIFY/AUDIT
 | "The user wants a number for 500 VUs, I'll just scale up the 5 VU result linearly." | Rule 5 requires rejecting this extrapolation and explaining why (e.g. non-linear queueing effects, single-writer contention) instead of producing an unmeasured figure. |
 | "The CPU graph clearly spikes to 100%, so the bottleneck is obvious; there's no need to inspect the remaining 3 layers of the architecture stack." | High CPU is often a symptom, not a cause (e.g. spin-locks from DB contention or event-loop starvation). All 4 layers must be inspected to isolate the true root cause. |
 | "Omitting the exact VU count and ramp duration from the report because it was already defined in PERF_SPEC.md." | Every report must be fully self-contained. Load profile boundaries and SUT limits must be explicitly stated inside every generated artifact. |
+| "The user already mentioned testing `example.com` earlier in the conversation, that's confirmation enough — no need to ask again explicitly." | A casual mention is not informed authorization. Given Stress/Spike can escalate to hundreds of VUs, PLAN must get an explicit, unambiguous confirmation that this specific host is an authorized test target — silently inferring consent from context is exactly the kind of unconfirmed assumption Rule 2 now exists to block. |
 
 ## Red Flags
 
@@ -92,6 +93,7 @@ If `PERF_SPEC.md` declares multiple strategies (e.g. Load + Spike), VERIFY/AUDIT
 - Raw `k6` output is paraphrased in prose instead of pasted as a fenced ASCII block.
 - A report or log for a multi-strategy engagement is written to a fixed path (e.g. `audit-rca.md` or `verify-sanity.md`) instead of using dynamic `{strategy}` suffixes (e.g. `audit-rca-baseline.md`), risking silent overwrite of prior physical evidence.
 - A `/perf-*` command is invoked without first confirming that `hooks/session-start.sh` has executed successfully and passed for the current session.
+- PLAN proceeds past target-authorization or third-party-sandbox confirmation without an explicit, captured user response — inferring consent from context or prior conversation is non-compliant.
 
 ## Required Output Format
 
