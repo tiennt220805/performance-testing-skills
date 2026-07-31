@@ -1,4 +1,5 @@
 {
+  "_note": "This manifest is descriptive only — actual enforcement happens via AGENTS.md's Environment Hook Check, which instructs the agent to run session-start.sh directly. See hooks/README.md.",
   "hooks": {
     "SessionStart": [
       {
