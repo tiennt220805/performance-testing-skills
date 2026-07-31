@@ -65,7 +65,9 @@ fi
 
 # 3. [WARNING, not fatal] Optional supporting tooling. Nothing in this suite requires these
 #    directly — they only help with ad-hoc manual debugging — so their absence is a warning only.
-for tool in node curl jq; do
+#    docker is only needed if the user opts into the observability stack
+#    (references/observability-stack-setup.md) — its absence never blocks the core lifecycle.
+for tool in node curl jq docker; do
   if ! command -v "$tool" >/dev/null 2>&1; then
     echo "[WARNING] Optional tool '${tool}' not found on PATH — not required by this suite, but some manual debugging workflows may expect it."
   fi
